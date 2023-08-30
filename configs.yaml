@@ -1,0 +1,10 @@
+video_root: /movies
+sub_root: /movies
+video_ext:
+- mp4
+- mkv
+- avi
+sub_ext:
+- ass
+- srt
+- vtt

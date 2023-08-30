@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/cinema/favicon.ico">
+    <title>BerryJungle Cinema</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.5.0/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* width */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        /* Track */
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Handle */
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 5px;
+        }
+
+        /* Handle on hover */
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+
+<body x-data="
+    {
+        videoSrc: '',
+        videos: {},
+        subSrc: '',
+        subs: {},
+        currentFolder: {},
+        prevFolder: [],
+        tab: 'videos',
+        getVideos: function() {
+            fetch('/cinema/api/videos')
+                .then(resp => resp.json())
+                .then(json => {
+                    this.videos = json;
+                    this.currentFolder = json;
+                });
+            fetch('/cinema/api/subs')
+                .then(resp => resp.json())
+                .then(json => {
+                    this.subs = json;
+                })
+        }
+    }" x-init="getVideos()" class="bg-slate-900 flex flex-row justify-center items-stretch w-screen overflow-x-hidden overflow-y-auto">
+    <div class="w-full max-w-4xl bg-slate-700 flex flex-col grow">
+        <h1 class="text-3xl text-slate-50 p-4 text-center">Sankabox Cinema</h1>
+        <video :src="videoSrc?'/cinema/static?path=' + encodeURIComponent(videoSrc):''" controls class="aspect-video">
+            <track :src="subSrc?'/cinema/static?path=' + encodeURIComponent(subSrc):''" default/>
+        </video>
+        <button x-data="{toggle: function() {
+            if (this.tab == 'videos') {
+                this.tab = 'subs';
+                this.currentFolder = this.subs;
+            } else {
+                this.tab = 'videos';
+                this.currentFolder = this.videos;
+            }
+            this.prevFolder = [];
+        }}" @click="toggle()"
+            class="flex rounded-md bg-slate-500 shadow-inner m-2 p-2 justify-center items-stretch text-xl">
+            <span class="rounded-md grow text-slate-900 mr-1 p-2" :class="tab=='videos'?'bg-slate-300':''">Videos</span>
+            <span class="rounded-md grow text-slate-900 ml-1 p-2" :class="tab=='subs'?'bg-slate-300':''">Subtitiles</span>
+        </button>
+        <button x-data="{back: function() {
+            if (this.prevFolder.length == 0) return;
+            this.currentFolder = this.prevFolder.pop();
+        }}" x-text="'Back to: ' + currentFolder.path" @click="back()"
+            class="bg-slate-300 cursor-pointer select-none m-2 p-2 rounded-md text-xl transition-all shadow-lg hover:shadow-slate-50"></button>
+        <div x-data="{forward: function(target) {
+            if (target.type != 'folder') {
+                if (this.tab == 'videos') this.videoSrc = target.path;
+                else this.subSrc = target.path;
+                return;
+            }
+            this.prevFolder.push(this.currentFolder);
+            currentFolder=target;
+        }}" class="select-none p-4 transition-all">
+            <template x-for="child in currentFolder.children" :key="child.path">
+                <button @click="forward(child)"
+                    class="cursor-pointer border-b border-slate-800 text-lg p-2 text-slate-50 fill-slate-50 flex items-center w-full hover:text-slate-900 hover:fill-slate-900 hover:bg-slate-300">
+                    <svg t="1693396335609" x-show="child.type == 'file' && tab == 'subs'" class="w-6 h-6 mr-2" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="7837" width="200" height="200">
+                        <path
+                            d="M853.333333 170.666667H170.666667c-47.146667 0-85.333333 38.186667-85.333334 85.333333v512c0 47.146667 38.186667 85.333333 85.333334 85.333333h682.666666c47.146667 0 85.333333-38.186667 85.333334-85.333333V256c0-47.146667-38.186667-85.333333-85.333334-85.333333zM170.666667 512h170.666666v85.333333H170.666667v-85.333333z m426.666666 256H170.666667v-85.333333h426.666666v85.333333z m256 0h-170.666666v-85.333333h170.666666v85.333333z m0-170.666667H426.666667v-85.333333h426.666666v85.333333z"
+                            p-id="7838"></path>
+                    </svg>
+                    <svg t="1693393717188" x-show="child.type == 'file' && tab == 'videos'" class="w-6 h-6 mr-2" viewBox="0 0 1024 1024"
+                        version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6841" width="200" height="200">
+                        <path
+                            d="M768 170.666667l85.333333 170.666666h-128l-85.333333-170.666666h-85.333333l85.333333 170.666666h-128l-85.333333-170.666666H341.333333l85.333334 170.666666H298.666667L213.333333 170.666667H170.666667c-46.933333 0-85.333333 38.4-85.333334 85.333333v512c0 46.933333 38.4 85.333333 85.333334 85.333333h682.666666c46.933333 0 85.333333-38.4 85.333334-85.333333V170.666667h-170.666667z"
+                            p-id="6842"></path>
+                    </svg>
+                    <svg x-show="child.type == 'folder'" t="1693393380468" class="w-6 h-6 mr-2" viewBox="0 0 1024 1024"
+                        version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4039" width="200" height="200">
+                        <path
+                            d="M426.666667 170.666667H170.666667c-46.933333 0-85.333333 38.4-85.333334 85.333333v512c0 46.933333 38.4 85.333333 85.333334 85.333333h682.666666c46.933333 0 85.333333-38.4 85.333334-85.333333V341.333333c0-46.933333-38.4-85.333333-85.333334-85.333333h-341.333333l-85.333333-85.333333z"
+                            p-id="4040"></path>
+                    </svg>
+                    <span x-text="child.name"></span>
+                </button>
+            </template>
+        </div>
+    </div>
+</body>
+
+</html>
